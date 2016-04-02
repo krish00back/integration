@@ -9,8 +9,8 @@ import javax.ws.rs.ext.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.frugalbin.common.dto.response.communication.ErrorResponse;
 import com.frugalbin.common.exceptions.BusinessException;
-import com.frugalbin.integration.controllers.dto.response.ErrorResponse;
 
 
 @Provider

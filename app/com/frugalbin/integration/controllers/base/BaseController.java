@@ -8,9 +8,9 @@ import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.frugalbin.integration.controllers.dto.response.ErrorResponse;
-import com.frugalbin.integration.exceptions.BusinessException1;
-import com.frugalbin.integration.exceptions.ErrorConstants;
+import com.frugalbin.common.dto.response.communication.ErrorResponse;
+import com.frugalbin.common.exceptions.BusinessException;
+import com.frugalbin.common.exceptions.ErrorConstants;
 
 public class BaseController extends Controller
 {
@@ -23,17 +23,45 @@ public class BaseController extends Controller
 	 * @return
 	 * @throws BusinessException1
 	 */
-	public <A> A convertRequestBodyToObject(RequestBody requestBody, Class<A> clazz) throws BusinessException1
+	public <A> A convertRequestBodyToObject(RequestBody requestBody, Class<A> clazz) throws BusinessException
+	{
+		JsonNode jsonNode = requestBody.asJson();
+		return convertJsonNodeToObject(jsonNode, clazz);
+	}
+
+	/**
+	 * Converts RequestBody to ObjectDto
+	 * 
+	 * @param responseBody
+	 * @param clazz
+	 * @return
+	 * @throws BusinessException1
+	 */
+	public <A> A convertResponseBodyToObject(RequestBody responseBody, Class<A> clazz) throws BusinessException
+	{
+		JsonNode jsonNode = responseBody.asJson();
+		return convertJsonNodeToObject(jsonNode, clazz);
+
+	}
+
+	/**
+	 * Converts RequestBody to ObjectDto
+	 * 
+	 * @param requestBody
+	 * @param clazz
+	 * @return
+	 * @throws BusinessException1
+	 */
+	public <A> A convertJsonNodeToObject(JsonNode jsonNode, Class<A> clazz) throws BusinessException
 	{
 		try
 		{
-			JsonNode jsonNode = requestBody.asJson();
 			return Json.fromJson(jsonNode, clazz);
 		}
 		catch (Exception ex)
 		{
 			ErrorConstants error = ErrorConstants.INVALID_REQUEST_DATA;
-			throw new BusinessException1(error.errorCode, error.errorMessage, ex.getCause());
+			throw new BusinessException(error.errorCode, error.errorMessage, ex.getCause());
 		}
 	}
 

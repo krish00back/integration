@@ -15,6 +15,8 @@ GET		/frugalbin/myAccount					@com.frugalbin.integration.controllers.rest.Integr
 
 GET		/frugalbin/myOrders						@com.frugalbin.integration.controllers.rest.IntegrationController.myOrders()
 
+POST	/frugalbin/saveRequest					@com.frugalbin.integration.controllers.rest.IntegrationController.saveRequest()
+
 GET 	/frugalbin/getCityList					@com.frugalbin.integration.controllers.rest.IntegrationController.getCityList()
 
 POST	/frugalbin/getFlightSlotDetails			@com.frugalbin.integration.controllers.rest.IntegrationController.getFlightSlotDetails()

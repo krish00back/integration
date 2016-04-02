@@ -1,3 +1,6 @@
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
@@ -12,6 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import play.Application;
 import play.GlobalSettings;
+
 
 /**
  * Application wide behaviour. We establish a Spring application context for the
@@ -55,6 +59,7 @@ public class Global extends GlobalSettings
 		// This will construct the beans and call any construction lifecycle
 		// methods e.g. @PostConstruct
 		ctx.start();
+
 	}
 
 	/**
@@ -85,11 +90,8 @@ public class Global extends GlobalSettings
 	 * JPA.
 	 */
 	@Configuration
-	@EnableJpaRepositories("com.frugalbin.integration.repositories")
-	@ComponentScan(basePackages = { "com.frugalbin.integration.caches",
-			"com.frugalbin.integration.controllers", "com.frugalbin.integration.controllers.rest",
-			"com.frugalbin.integration.models", "com.frugalbin.integration.services",
-			"com.frugalbin.integration.services.impl", "com.frugalbin.integration.integration" })
+	//@EnableJpaRepositories("com.frugalbin.integration.repositories")
+	@ComponentScan(basePackages = { "com.frugalbin.integration.controllers", "com.frugalbin.integration.controllers.rest" })
 	// , "models", "services.service", "services.serviceimpl",
 	// "controllers.bootstrap"})
 	@EnableTransactionManagement
@@ -115,10 +117,10 @@ public class Global extends GlobalSettings
 
 		/*@Bean
 		public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean() {*/
-		@Bean
-		public EntityManagerFactory entityManagerFactory()
-		{
-			return Persistence.createEntityManagerFactory(DEFAULT_PERSISTENCE_UNIT);
+		//@Bean
+		//public EntityManagerFactory entityManagerFactory()
+		//{
+			//return Persistence.createEntityManagerFactory(DEFAULT_PERSISTENCE_UNIT);
 			/*LocalContainerEntityManagerFactoryBean entiryManagerFactoryBean = new LocalContainerEntityManagerFactoryBean();
 			
 			entiryManagerFactoryBean.setDataSource(dataSource());
@@ -146,9 +148,9 @@ public class Global extends GlobalSettings
 			
 			//return entiryManagerFactoryBean.getNativeEntityManagerFactory();
 			return entiryManagerFactoryBean;*/
-		}
+		//}
 
-		@Bean
+		/*@Bean
 		public HibernateExceptionTranslator hibernateExceptionTranslator()
 		{
 			return new HibernateExceptionTranslator();
@@ -158,6 +160,6 @@ public class Global extends GlobalSettings
 		public JpaTransactionManager transactionManager()
 		{
 			return new JpaTransactionManager();
-		}
+		}*/
 	}
 }

@@ -2,7 +2,9 @@ package com.frugalbin.integration.exceptions;
 
 import java.util.List;
 
-public class ValidationException extends BusinessException1
+import com.frugalbin.common.exceptions.BusinessException;
+
+public class ValidationException extends BusinessException
 {
 
 	/**
