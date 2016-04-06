@@ -24,6 +24,7 @@ public enum IntegrationRestProtocol implements RestClientProtocolInterface
 	AUTH_LOGIN(RequestType.POST, IntegrationRestProtocol.AUTH_URL + "login"),
 	AUTH_REGISTER(RequestType.POST, IntegrationRestProtocol.AUTH_URL + "signup"),
 	AUTH_ACC_DETAILS(RequestType.POST, IntegrationRestProtocol.AUTH_URL + "account"),
+	AUTH_GET_USER(RequestType.POST, IntegrationRestProtocol.AUTH_URL + "getUser"),
 
 	// PAYMENT MODULE
 
@@ -38,19 +39,23 @@ public enum IntegrationRestProtocol implements RestClientProtocolInterface
 	INV_AIR_GET_CITY(RequestType.GET, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "getCityList"),
 	INV_AIR_GET_FLIGHT_SLOTS(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "getFlightSlotDetails"),
 	INV_AIR_BOOK_TICKET(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "bookFlightTicket"),
+	INV_AIR_CREATE_USER_REQUEST(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "createUserRequest"),
+	INV_AIR_GET_REQUESTED_FLIGHT_DETAILS(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "getRequestedFlightDetails"), 
+	INV_AIR_CHECK_FLIGHT_PRICE(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "checkFlightPrice"),
+	INV_AIR_SAVE_BOOKING(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "saveBooking"),
 
 	// DELIVERY MODULE
 	;
 
 	private static final String URL_PATH_SEPARATOR = "/";
 
-	private static final String CURR_URL = "http://localhost:9001" + URL_PATH_SEPARATOR;
+	private static final String CURR_URL = "http://localhost";
 
-	private static final String AUTH_URL = CURR_URL + "authentication" + URL_PATH_SEPARATOR;
-	private static final String PAYMENT_URL = CURR_URL + "payment" + URL_PATH_SEPARATOR;
-	private static final String COMMUNICATION_URL = CURR_URL + "communication" + URL_PATH_SEPARATOR;
-	private static final String INVENTORY_AIRLINE_URL = CURR_URL + "inventoryAirline" + URL_PATH_SEPARATOR;
-	private static final String DELIVERY_URL = CURR_URL + "delivery" + URL_PATH_SEPARATOR;
+	private static final String AUTH_URL = CURR_URL + ":9000" + URL_PATH_SEPARATOR;
+	private static final String PAYMENT_URL = CURR_URL + ":9001" + URL_PATH_SEPARATOR + "payment" + URL_PATH_SEPARATOR;
+	private static final String COMMUNICATION_URL = CURR_URL + ":9001" + URL_PATH_SEPARATOR + "communication" + URL_PATH_SEPARATOR;
+	private static final String INVENTORY_AIRLINE_URL = CURR_URL + ":9001" + URL_PATH_SEPARATOR + "inventoryAirline" + URL_PATH_SEPARATOR;
+	private static final String DELIVERY_URL = CURR_URL + ":9001" + URL_PATH_SEPARATOR + "delivery" + URL_PATH_SEPARATOR;
 
 	private final String url;
 
