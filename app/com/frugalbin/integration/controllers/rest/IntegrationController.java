@@ -1,5 +1,7 @@
 package com.frugalbin.integration.controllers.rest;
 
+import java.util.Map;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -11,15 +13,25 @@ import play.libs.Json;
 import play.libs.WS.Response;
 import play.mvc.BodyParser;
 import play.mvc.Result;
-import antlr.debug.GuessingEvent;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.frugalbin.common.dto.request.authentication.UsersRequestDto;
 import com.frugalbin.common.dto.request.communication.CommunicationRequestDto;
 import com.frugalbin.common.dto.request.communication.SendCommunicationRequestDto;
+import com.frugalbin.common.dto.request.communication.SendFrugalbinMessageRequest;
 import com.frugalbin.common.dto.request.integration.SaveUserRequestBean;
 import com.frugalbin.common.dto.request.integration.UserDetailsBean;
+import com.frugalbin.common.dto.request.inventory.airline.FlightBookingRequest;
+import com.frugalbin.common.dto.request.payment.PaymentRequestDto;
 import com.frugalbin.common.dto.response.authentication.UsersResponseDto;
+import com.frugalbin.common.dto.response.communication.SuccessStatusResponse;
+import com.frugalbin.common.dto.response.integration.BeginTransactionRequest;
 import com.frugalbin.common.dto.response.integration.FlightSearchResponseBean;
+import com.frugalbin.common.dto.response.integration.SaveUserResponseBean;
+import com.frugalbin.common.dto.response.inventory.airline.PriceCheckResponseBean;
+import com.frugalbin.common.dto.response.inventory.airline.SaveBookingResponseBean;
+import com.frugalbin.common.dto.response.payment.PaymentResponseDto;
+import com.frugalbin.common.dto.response.payment.PaymentValidationResponse;
 import com.frugalbin.common.enums.TemplateNames;
 import com.frugalbin.common.exceptions.BusinessException;
 import com.frugalbin.common.rest.client.RestClient;
@@ -34,11 +46,23 @@ public class IntegrationController extends BaseController
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationController.class);
 
+	public Result enablecors()
+	{
+		System.out.println("inside enable cors");
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
+		response().setHeader("Access-Control-Allow-Methods", "HEAD,GET,PUT,DELETE,OPTIONS");
+		response().setHeader("Access-Control-Max-Age", "10000");
+		response().setHeader("Access-Control-Allow-Headers",
+				"Origin, X-Requested-With, Content-Type, Accept, Referrer, User-Agent");
+		return ok();
+	}
+
 	@BodyParser.Of(BodyParser.Json.class)
 	public Result login(String sessionId) throws BusinessException
 	{
 		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.AUTH_LOGIN, request().body().asJson(),
 				sessionId);
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
 		return ok(Util.getJsonResponse(res));
 	}
 
@@ -62,7 +86,7 @@ public class IntegrationController extends BaseController
 
 		CommunicationRequestDto commReq = new CommunicationRequestDto();
 		commReq.setTemplateId(regConfirmationTemplateId);
-		commReq.setKeyValues("");
+		commReq.setTemplateKeyValues("");
 
 		res = RestClient.sendRequest(IntegrationRestProtocol.COMM_CREATE, Json.toJson(commReq));
 		Long commId = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(), Long.class);
@@ -80,7 +104,7 @@ public class IntegrationController extends BaseController
 
 		commReq = new CommunicationRequestDto();
 		commReq.setTemplateId(regWelcomeTemplateId);
-		commReq.setKeyValues("");
+		commReq.setTemplateKeyValues("");
 
 		res = RestClient.sendRequest(IntegrationRestProtocol.COMM_CREATE, Json.toJson(commReq));
 		commId = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(), Long.class);
@@ -110,6 +134,7 @@ public class IntegrationController extends BaseController
 	public Result getCityList() throws BusinessException
 	{
 		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_GET_CITY);
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
 		return ok(Util.getJsonResponse(res));
 	}
 
@@ -134,8 +159,8 @@ public class IntegrationController extends BaseController
 		UserDetailsBean userDetails = saveUserReq.getUserDetails();
 
 		// Save user details and get userId(auth)
-		UsersRequestDto usersRequestDto = new UsersRequestDto("GUEST", userDetails.getName(), null,
-				userDetails.getEmail(), userDetails.getPhoneno());
+		UsersRequestDto usersRequestDto = new UsersRequestDto("GUEST", null, userDetails.getEmail(),
+				userDetails.getPhoneno(), userDetails.getFirstName(), userDetails.getLastName());
 		Promise<Response> response = RestClient.sendRequest(IntegrationRestProtocol.AUTH_LOGIN,
 				Json.toJson(usersRequestDto));
 
@@ -144,37 +169,191 @@ public class IntegrationController extends BaseController
 		saveUserReq.getUserDetails().setUserId(userResponse.getUserId());
 
 		// Save request details(Inventory Airline)
-		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_CREATE_USER_REQUEST, saveUserReq);
-		return ok(Util.getJsonResponse(res));
+		Promise<Response> saveUserJsonRes = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_CREATE_USER_REQUEST,
+				saveUserReq);
+		SaveUserResponseBean saveUserResponse = convertJsonNodeToObject(saveUserJsonRes.get(Constants.REST_TIMEOUT)
+				.asJson(), SaveUserResponseBean.class);
+
+		if (!saveUserResponse.getRequestStatus())
+		{
+			SuccessStatusResponse statusResponse = new SuccessStatusResponse();
+			statusResponse.setIsSuccess(false);
+			statusResponse.setFailureMsg(saveUserResponse.getFailureReason());
+			return convertObjectToJsonResponse(statusResponse);
+		}
+		
+		response = sendCommunicationEmail(TemplateNames.SEND_USER_REQUEST_LINK, "%RequestId%="
+					+ saveUserResponse.getRequestId(), "care@frugalbin.com", "care@frugalbin.com",
+					"Subject=Send Link for Flight Search Request;VisibleName=Customer Care FrugalBin");
+
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
+//		return ok(Util.getJsonResponse(response));
+		return convertObjectToJsonResponse(saveUserResponse);
 	}
-	
+
 	@BodyParser.Of(BodyParser.Json.class)
 	public Result getRequestedFlightDetails() throws BusinessException
 	{
-		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_GET_REQUESTED_FLIGHT_DETAILS, request().body().asJson());
-		FlightSearchResponseBean flightSearchResponseBean = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(), FlightSearchResponseBean.class);
-		
-		res = RestClient.sendRequest(IntegrationRestProtocol.AUTH_GET_USER, flightSearchResponseBean.getSearchRequest().getUserDetails());
-		UserDetailsBean userDetail = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(), UserDetailsBean.class);
-		
+		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_GET_REQUESTED_FLIGHT_DETAILS,
+				request().body().asJson());
+		JsonNode jsonNode = res.get(Constants.REST_TIMEOUT).asJson();
+
+		if (jsonNode.has("errorCode"))
+		{
+			return ok(jsonNode);
+		}
+
+		FlightSearchResponseBean flightSearchResponseBean = convertJsonNodeToObject(jsonNode,
+				FlightSearchResponseBean.class);
+
+		res = RestClient.sendRequest(IntegrationRestProtocol.AUTH_GET_USER, flightSearchResponseBean.getSearchRequest()
+				.getUserDetails());
+		UserDetailsBean userDetail = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(),
+				UserDetailsBean.class);
+
+		flightSearchResponseBean.getSearchRequest().getUserDetails().setFirstName(userDetail.getFirstName());
+		flightSearchResponseBean.getSearchRequest().getUserDetails().setLastName(userDetail.getLastName());
 		flightSearchResponseBean.getSearchRequest().getUserDetails().setEmail(userDetail.getEmail());
 		flightSearchResponseBean.getSearchRequest().getUserDetails().setPhoneno(userDetail.getPhoneno());
 		flightSearchResponseBean.getSearchRequest().getUserDetails().setUserId(null);
-		
+
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
 		return convertObjectToJsonResponse(flightSearchResponseBean);
 	}
-	
+
+	@BodyParser.Of(BodyParser.Json.class)
+	public Result sendRequestedFlightLink(String requestId) throws BusinessException
+	{
+		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_GET_USER_DETAILS, requestId);
+		Response response = res.get(Constants.REST_TIMEOUT);
+		if (response.getStatus() != 200)
+		{
+			throw new BusinessException(1001, "Invalid User Request");
+		}
+
+		UserDetailsBean userDetailsBean = convertJsonNodeToObject(response.asJson(), UserDetailsBean.class);
+
+		res = RestClient.sendRequest(IntegrationRestProtocol.AUTH_GET_USER, userDetailsBean);
+		UserDetailsBean userDetail = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(),
+				UserDetailsBean.class);
+
+		res = sendCommunicationEmail(TemplateNames.USER_REQUEST_LINK, "%RequestId%=" + requestId, "care@frugalbin.com",
+				userDetail.getEmail(), "Subject=Flight Search Request Link;VisibleName=Customer Care FrugalBin");
+		return ok(Util.getJsonResponse(res));
+	}
+
 	@BodyParser.Of(BodyParser.Json.class)
 	public Result checkFlightPrice() throws BusinessException
 	{
-		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_CHECK_FLIGHT_PRICE, request().body().asJson());
+		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_CHECK_FLIGHT_PRICE, request()
+				.body().asJson());
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
 		return ok(Util.getJsonResponse(res));
 	}
-	
+
 	@BodyParser.Of(BodyParser.Json.class)
 	public Result beginFlightTransaction() throws BusinessException
 	{
-		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_SAVE_BOOKING, request().body().asJson());
+		BeginTransactionRequest request = convertJsonNodeToObject(request().body().asJson(),
+				BeginTransactionRequest.class);
+
+		// Price Check
+		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_CHECK_FLIGHT_PRICE,
+				request.getPriceCheckRequest());
+		PriceCheckResponseBean priceCheckResponseBean = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT)
+				.asJson(), PriceCheckResponseBean.class);
+
+		if (!priceCheckResponseBean.getIsSuccess() || priceCheckResponseBean.getIsFareChanged())
+		{
+			return convertObjectToJsonResponse(priceCheckResponseBean);
+		}
+
+		// SaveBooking
+		/*Promise<Response> */res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_SAVE_BOOKING, request.getPriceCheckRequest());
+
+		SaveBookingResponseBean saveBookingResponseBean = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT)
+				.asJson(), SaveBookingResponseBean.class);
+
+		if (!saveBookingResponseBean.getSuccess())
+		{
+			throw new BusinessException(1001, "Couldn't save the booking, Frugal might have been missed :(");
+		}
+
+		PaymentRequestDto paymentUrRequest = request.getPaymentUrlRequest();
+		paymentUrRequest.udf1 = saveBookingResponseBean.getBookingId();
+		res = RestClient.sendRequest(IntegrationRestProtocol.PAYMENT_GET_PGURL, paymentUrRequest);
+
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
+		Response response = res.get(Constants.REST_TIMEOUT);
+		return ok(response.asByteArray()).as("text/html");
+	}
+
+	@BodyParser.Of(BodyParser.Json.class)
+	public Result completeFlightTransaction() throws BusinessException
+	{
+		PaymentResponseDto paymentResponseDto = convertJsonNodeToObject(request().body().asJson(),
+				PaymentResponseDto.class);
+		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.PAYMENT_VALIDATE_PG_RESPONSE,
+				paymentResponseDto);
+
+		PaymentValidationResponse paymentValidationResponse = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT)
+				.asJson(), PaymentValidationResponse.class);
+
+		// check condition if valid
+		if (!paymentValidationResponse.isValid())
+		{
+			throw new BusinessException(1001, "Payment Response is corrupted: "
+					+ paymentValidationResponse.getMessage());
+		}
+
+		FlightBookingRequest bookingRequest = new FlightBookingRequest();
+		bookingRequest.setBookingId(paymentResponseDto.udf1);
+		res = RestClient.sendRequest(IntegrationRestProtocol.INV_AIR_BOOK_TICKET, request().body().asJson());
+
+		response().setHeader("Access-Control-Allow-Origin", request().getHeader("Origin"));
 		return ok(Util.getJsonResponse(res));
+	}
+
+	@BodyParser.Of(BodyParser.Json.class)
+	public Result sendFrugalbinMessage() throws BusinessException
+	{
+		SendFrugalbinMessageRequest msgRequest = convertJsonNodeToObject(request().body().asJson(),
+				SendFrugalbinMessageRequest.class);
+
+		Promise<Response> res = sendCommunicationEmail(TemplateNames.SEND_FRUGALBIN_MESSAGE, "%FBMessage%="
+				+ msgRequest.getMessage(), msgRequest.getFromEmailAddr(), "care@frugalbin.com",
+				"Subject=" + msgRequest.getSubject() + ";VisibleName=" + msgRequest.getFromName());
+		return ok(Util.getJsonResponse(res));
+	}
+
+	private Promise<Response> sendCommunicationEmail(TemplateNames template, String templateKeyValues, String from,
+			String to, String commInfoKeyValues) throws BusinessException
+	{
+		// Get Template Id
+		Promise<Response> res = RestClient.sendRequest(IntegrationRestProtocol.COMM_GET_TEMPLATE, template.name());
+
+		Map<String, Integer> resMap = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(), Map.class);
+		Long templateId = resMap.get("templateId").longValue();
+
+		// Create Communication
+		CommunicationRequestDto commReq = new CommunicationRequestDto();
+		commReq.setTemplateId(templateId);
+		commReq.setTemplateKeyValues(templateKeyValues);
+		commReq.setFrom(from);
+		commReq.setTo(to);
+		commReq.setCommInfoKeyValues(commInfoKeyValues);
+
+		res = RestClient.sendRequest(IntegrationRestProtocol.COMM_CREATE, Json.toJson(commReq));
+		Map<String, Integer> commIdMap = convertJsonNodeToObject(res.get(Constants.REST_TIMEOUT).asJson(), Map.class);
+
+		Long commId = commIdMap.get("communicationId").longValue();
+
+		// Send Communication
+		SendCommunicationRequestDto sendReq = new SendCommunicationRequestDto();
+		sendReq.setCommunicationIds(new Long[] { commId });
+
+		res = RestClient.sendRequest(IntegrationRestProtocol.COMM_SEND, Json.toJson(sendReq));
+
+		return res;
 	}
 }

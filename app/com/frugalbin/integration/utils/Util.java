@@ -1,6 +1,7 @@
 package com.frugalbin.integration.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.frugalbin.common.utils.Constants;
 
 import play.libs.F.Function;
 import play.libs.F.Promise;
@@ -17,6 +18,6 @@ public class Util
 			{
 				return res.asJson();
 			}
-		}).get(10000);
+		}).get(Constants.REST_TIMEOUT);
 	}
 }

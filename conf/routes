@@ -7,6 +7,18 @@
 
 GET     /										@com.frugalbin.integration.controllers.rest.Application.index
 
+OPTIONS		/frugalbin/saveRequest		 			@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
+OPTIONS		/frugalbin/getCityList		 			@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
+OPTIONS		/frugalbin/getRequestedFlightDetails	@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
+OPTIONS		/frugalbin/checkFlightPrice 			@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
+OPTIONS		/frugalbin/beginFlightTransaction		@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
+#OPTIONS	/frugalbin/{URLPlaceholder} 			@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
 #GET	/frugalbin/login						@com.frugalbin.integration.controllers.rest.IntegrationController.login(sessionId)
 
 #GET	/frugalbin/register						@com.frugalbin.integration.controllers.rest.IntegrationController.register()
@@ -25,9 +37,13 @@ GET 	/frugalbin/getCityList					@com.frugalbin.integration.controllers.rest.Inte
 
 POST	/frugalbin/getRequestedFlightDetails	@com.frugalbin.integration.controllers.rest.IntegrationController.getRequestedFlightDetails()
 
+GET	/frugalbin/sendRequestedFlightLink		@com.frugalbin.integration.controllers.rest.IntegrationController.sendRequestedFlightLink(requestId)
+
 POST	/frugalbin/checkFlightPrice				@com.frugalbin.integration.controllers.rest.IntegrationController.checkFlightPrice()
 
 POST	/frugalbin/beginFlightTransaction		@com.frugalbin.integration.controllers.rest.IntegrationController.beginFlightTransaction()
+
+POST	/frugalbin/completeFlightTransaction		@com.frugalbin.integration.controllers.rest.IntegrationController.completeFlightTransaction()
 
 # APIs/routes for INTERNAL USE
 # TODO: Need to add CORS Filter to restrict refreshDB api to be called from outside
