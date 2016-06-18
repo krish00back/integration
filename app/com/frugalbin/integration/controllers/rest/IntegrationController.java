@@ -357,7 +357,7 @@ public class IntegrationController extends BaseController
 				.asJson(), PaymentValidationResponse.class);
 
 		// check condition if valid
-		if (!paymentValidationResponse.isValid())
+		if (!paymentValidationResponse.getIsValid())
 		{
 			LOGGER.info("Invalid payment details");
 			throw new BusinessException(1001, "Payment Response is corrupted: "
