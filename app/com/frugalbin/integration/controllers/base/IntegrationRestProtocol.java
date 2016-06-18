@@ -39,7 +39,7 @@ public enum IntegrationRestProtocol implements RestClientProtocolInterface
 	// INVENTORY MODULE
 	INV_AIR_GET_CITY(RequestType.GET, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "getCityList"),
 	INV_AIR_GET_FLIGHT_SLOTS(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "getFlightSlotDetails"),
-	INV_AIR_BOOK_TICKET(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "bookFlightTicket"),
+	INV_AIR_BOOK_TICKET(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "bookFlight"),
 	INV_AIR_CREATE_USER_REQUEST(RequestType.POST, IntegrationRestProtocol.INVENTORY_AIRLINE_URL + "createUserRequest"),
 	INV_AIR_GET_USER_DETAILS(RequestType.GET, IntegrationRestProtocol.INVENTORY_AIRLINE_URL
 			+ "getUserDetails", "requestId"),
