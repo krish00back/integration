@@ -17,6 +17,8 @@ OPTIONS		/frugalbin/checkFlightPrice 			@com.frugalbin.integration.controllers.r
 
 OPTIONS		/frugalbin/beginFlightTransaction		@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
 
+OPTIONS		/frugalbin/completeFlightTransaction	@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
+
 #OPTIONS	/frugalbin/{URLPlaceholder} 			@com.frugalbin.integration.controllers.rest.IntegrationController.enablecors
 
 #GET	/frugalbin/login						@com.frugalbin.integration.controllers.rest.IntegrationController.login(sessionId)
