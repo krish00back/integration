@@ -54,12 +54,14 @@ public enum IntegrationRestProtocol implements RestClientProtocolInterface
 	private static final String URL_PATH_SEPARATOR = "/";
 
 	private static final String CURR_URL = "http://localhost";
+	private static final String ANURAG_URL = "http://ec2-52-40-162-133.us-west-2.compute.amazonaws.com";
+	private static final String CARE_FB_URL = "http://localhost";
 
-	private static final String AUTH_URL = CURR_URL + ":9000" + URL_PATH_SEPARATOR;
-	private static final String PAYMENT_URL = CURR_URL + ":9003" + URL_PATH_SEPARATOR;
-	private static final String COMMUNICATION_URL = CURR_URL + ":9004" + URL_PATH_SEPARATOR + "communications"
+	private static final String AUTH_URL = CARE_FB_URL + ":9000" + URL_PATH_SEPARATOR;
+	private static final String PAYMENT_URL = ANURAG_URL + ":9003" + URL_PATH_SEPARATOR;
+	private static final String COMMUNICATION_URL = ANURAG_URL + ":9004" + URL_PATH_SEPARATOR + "communications"
 			+ URL_PATH_SEPARATOR;
-	private static final String INVENTORY_AIRLINE_URL = CURR_URL + ":9001" + URL_PATH_SEPARATOR + "inventoryAirline"
+	private static final String INVENTORY_AIRLINE_URL = CARE_FB_URL + ":9001" + URL_PATH_SEPARATOR + "inventoryAirline"
 			+ URL_PATH_SEPARATOR;
 	private static final String DELIVERY_URL = CURR_URL + ":9001" + URL_PATH_SEPARATOR + "delivery"
 			+ URL_PATH_SEPARATOR;
